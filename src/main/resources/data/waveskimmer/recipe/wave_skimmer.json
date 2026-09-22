@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "III",
+    "TTT",
+    "IRI"
+  ],
+  "key": {
+    "I": { "tag": "c:ingots/iron" },
+    "T": { "tag": "minecraft:trapdoors" },
+    "R": { "tag": "c:dusts/redstone" }
+  },
+  "result": {
+    "id": "waveskimmer:wave_skimmer",
+    "count": 1
+  }
+}

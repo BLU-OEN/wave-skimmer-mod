@@ -1,0 +1,7 @@
+{
+  "block.waveskimmer.wave_skimmer": "Wave Skimmer",
+  "tooltip.waveskimmer.wave_skimmer.place": "Place on the surface of still water",
+  "tooltip.waveskimmer.wave_skimmer.output": "Generates FE from waves - connect cables to the side or engine port",
+  "tooltip.waveskimmer.wave_skimmer.bonus": "More open water, oceans and storms mean more power",
+  "message.waveskimmer.status": "Wave Skimmer: %s / %s FE  |  Generating %s FE/t"
+}

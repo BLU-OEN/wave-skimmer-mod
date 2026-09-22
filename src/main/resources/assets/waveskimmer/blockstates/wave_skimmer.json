@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "waveskimmer:block/wave_skimmer" },
+    "facing=east":  { "model": "waveskimmer:block/wave_skimmer", "y": 90 },
+    "facing=south": { "model": "waveskimmer:block/wave_skimmer", "y": 180 },
+    "facing=west":  { "model": "waveskimmer:block/wave_skimmer", "y": 270 }
+  }
+}

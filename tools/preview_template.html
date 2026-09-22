@@ -1,0 +1,684 @@
+<title>Wave Skimmer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #eef0ee;
+    --surface: #ffffff;
+    --surface-2: #f6f7f5;
+    --ink: #111416;
+    --muted: #5b6266;
+    --line: #d6dad6;
+    --accent: #1b6c84;
+    --accent-soft: #d8eaef;
+    --slot: #8b8b8b;
+    --slot-in: #c6c6c6;
+    --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e1113;
+      --surface: #161a1d;
+      --surface-2: #1c2124;
+      --ink: #eceeec;
+      --muted: #9aa2a6;
+      --line: #2a3135;
+      --accent: #62b8cf;
+      --accent-soft: #173640;
+      --slot: #3a3f42;
+      --slot-in: #262a2d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e1113;
+    --surface: #161a1d;
+    --surface-2: #1c2124;
+    --ink: #eceeec;
+    --muted: #9aa2a6;
+    --line: #2a3135;
+    --accent: #62b8cf;
+    --accent-soft: #173640;
+    --slot: #3a3f42;
+    --slot-in: #262a2d;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 var(--body);
+    padding-inline: clamp(16px, 4vw, 40px);
+    padding-block: 28px 56px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
+
+  header { display: grid; gap: 6px; }
+  .eyebrow {
+    font: 500 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font: 700 clamp(34px, 6vw, 56px)/1 var(--display);
+    letter-spacing: -.01em;
+    margin: 4px 0 2px;
+    text-wrap: balance;
+  }
+  h1 .split { display: inline-block; padding: 0 .18em; background: var(--ink); color: var(--bg); margin-left: .1em; }
+  .lede { max-width: 62ch; color: var(--muted); margin: 0; }
+
+  h2 {
+    font: 600 13px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+  .stage {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #bcd3de;
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    max-height: 72vh;
+    width: 100%;
+    touch-action: none;
+    cursor: grab;
+  }
+  .stage:active { cursor: grabbing; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  @media (max-width: 600px) { .stage { aspect-ratio: 1 / 1; } }
+  .hint {
+    position: absolute; left: 12px; bottom: 12px;
+    font: 500 12px/1 var(--mono);
+    color: #0d2733; background: rgba(255,255,255,.72);
+    padding: 7px 9px; border-radius: 4px; pointer-events: none;
+  }
+  .compass {
+    position: absolute; right: 12px; top: 12px;
+    font: 600 12px/1 var(--mono); color: #0d2733;
+    background: rgba(255,255,255,.72); padding: 7px 9px; border-radius: 4px; pointer-events: none;
+  }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .chip {
+    font: 500 13px/1 var(--body);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .chip:focus-visible, .seg button:focus-visible, select:focus-visible, input:focus-visible, .part:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+  .seg button {
+    font: 600 12px/1 var(--mono); color: var(--ink); background: transparent;
+    border: 0; padding: 9px 11px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .toolbar .label { font: 500 12px/1 var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-left: 4px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 16px; }
+  .readout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .readout .big { grid-column: 1 / -1; }
+  .kv { display: grid; gap: 4px; }
+  .kv .k { font: 500 11px/1 var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .kv .v { font: 500 18px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+  .big .v { font: 700 44px/1 var(--display); }
+  .big .v small { font: 500 15px var(--mono); color: var(--muted); margin-left: 4px; }
+  #spark { width: 100%; height: 70px; display: block; }
+  .field { display: grid; gap: 6px; }
+  .field label { font: 500 13px/1.2 var(--body); display: flex; justify-content: space-between; }
+  .field label output { font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  select, input[type="range"] { width: 100%; accent-color: var(--accent); }
+  select { font: 14px var(--body); padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-2); color: var(--ink); }
+  .note { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .parts { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .part {
+    display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start;
+    padding: 8px; border-radius: 4px; cursor: default;
+  }
+  .part:hover, .part.on { background: var(--accent-soft); }
+  .part .sw { width: 22px; height: 22px; border-radius: 3px; image-rendering: pixelated; border: 1px solid var(--line); }
+  .part b { font: 600 14px/1.2 var(--body); display: block; }
+  .part span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+  .lower { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .lower { grid-template-columns: minmax(0, 1fr); } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; }
+
+  .craft { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 52px); gap: 4px; padding: 6px; background: var(--slot-in); border-radius: 4px; }
+  .slot {
+    width: 52px; height: 52px; background: var(--slot);
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,255,255,.25);
+    display: grid; place-items: center; position: relative;
+  }
+  .slot canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+  .arrow { font: 700 28px/1 var(--display); color: var(--muted); }
+  .result { width: 76px; height: 76px; }
+  .result canvas { width: 68px; height: 68px; image-rendering: auto; }
+  .legend { display: grid; gap: 6px; font-size: 14px; margin-top: 14px; }
+  .legend div { display: flex; gap: 8px; align-items: center; }
+  .legend code { font: 600 13px var(--mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; padding: 1px 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td:first-child { color: var(--muted); width: 44%; padding-right: 12px; }
+  td:last-child { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  .tex { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 14px; }
+  .tex figure { margin: 0; display: grid; gap: 6px; }
+  .tex img { width: 100%; aspect-ratio: 1; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 3px; max-width: 100%; }
+  .tex figcaption { font: 500 12px var(--mono); color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">waveskimmer · NeoForge 1.21.1 · All The Mods 10</div>
+    <h1>Wave <span class="split">Skimmer</span></h1>
+    <p class="lede">A black-and-white generator that floats on still water and turns waves into Forge Energy. Drag to orbit, scroll to zoom, and hover a part to find it on the model. The model and textures come straight from the mod's asset files.</p>
+  </header>
+
+  <div class="main">
+    <div>
+      <div class="stage" id="stage">
+        <div class="hint">drag · scroll · pinch</div>
+        <div class="compass" id="compass">facing N</div>
+      </div>
+      <div class="toolbar">
+        <button class="chip" id="t-motion" aria-pressed="true">Wave motion</button>
+        <button class="chip" id="t-bubbles" aria-pressed="true">Bubbles</button>
+        <button class="chip" id="t-water" aria-pressed="true">Water</button>
+        <button class="chip" id="t-bounds" aria-pressed="false">Block bounds</button>
+        <button class="chip" id="t-spin" aria-pressed="true">Auto-rotate</button>
+        <span class="label">Facing</span>
+        <div class="seg" id="facing">
+          <button aria-pressed="true" data-f="0">N</button>
+          <button aria-pressed="false" data-f="1">E</button>
+          <button aria-pressed="false" data-f="2">S</button>
+          <button aria-pressed="false" data-f="3">W</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div>
+        <h2>Live output</h2>
+        <div class="readout">
+          <div class="kv big"><span class="k">Generating now</span><span class="v"><span id="now">0</span><small>FE/t</small></span></div>
+          <div class="kv"><span class="k">Average</span><span class="v" id="avg">0 FE/t</span></div>
+          <div class="kv"><span class="k">Fills 100k buffer</span><span class="v" id="fill">–</span></div>
+        </div>
+      </div>
+      <canvas id="spark" aria-label="Generation over the last 10 seconds"></canvas>
+      <div class="field">
+        <label for="water">Open water below (5×5) <output id="water-out">25 / 25</output></label>
+        <input type="range" id="water" min="1" max="25" value="25">
+      </div>
+      <div class="field">
+        <label for="biome">Biome</label>
+        <select id="biome">
+          <option value="1">Lake or river (×1)</option>
+          <option value="1.5" selected>Ocean (×1.5)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="weather">Weather</label>
+        <select id="weather">
+          <option value="1">Clear (×1)</option>
+          <option value="1.25">Rain (×1.25)</option>
+          <option value="1.75">Thunderstorm (×1.75)</option>
+        </select>
+      </div>
+      <p class="note">Formula: 40 FE/t × wave (0.5–1.0) × open water ÷ 25 × biome × weather. All numbers are adjustable in <code>waveskimmer-common.toml</code>.</p>
+    </aside>
+  </div>
+
+  <section class="card">
+    <h2>Parts</h2>
+    <ul class="parts" id="parts"></ul>
+  </section>
+
+  <div class="lower">
+    <section class="card">
+      <h2>Crafting</h2>
+      <div class="craft">
+        <div class="grid3" id="craft"></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="slot result" id="result"></div>
+      </div>
+      <div class="legend">
+        <div><code>I</code> Iron ingot (any <code>c:ingots/iron</code>)</div>
+        <div><code>T</code> Any trapdoor, wooden or iron</div>
+        <div><code>R</code> Redstone dust</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Specs</h2>
+      <table>
+        <tr><td>Placement</td><td>On top of a still water source, like a lily pad</td></tr>
+        <tr><td>Base generation</td><td>40 FE/t peak</td></tr>
+        <tr><td>Realistic range</td><td>10 – 105 FE/t</td></tr>
+        <tr><td>Internal buffer</td><td>100,000 FE</td></tr>
+        <tr><td>Max push per face</td><td>1,000 FE/t</td></tr>
+        <tr><td>Output faces</td><td>All sides and top (not the bottom)</td></tr>
+        <tr><td>Cable ports</td><td>Side (east of the model) and top of the engine</td></tr>
+        <tr><td>Tool</td><td>Pickaxe</td></tr>
+        <tr><td>If the water is removed</td><td>Pops off and drops as an item</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Textures · 16×16</h2>
+    <div class="tex" id="tex"></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const MODEL = __MODEL_JSON__;
+  const TEX = __TEXTURES_JSON__;
+
+  const PARTS = [
+    { label: "Floats", els: ["left_float", "right_float"], tex: "hull_side", text: "Twin black pontoons with a white waterline stripe. They sit about 3 pixels below the surface." },
+    { label: "Skimmer blade", els: ["skimmer_blade"], tex: "blade", text: "Black-and-white striped plate at the nose, tilted 22.5° up to ride the incoming wave." },
+    { label: "Hull and intake", els: ["hull"], tex: "intake", text: "Water enters through the front grille and runs under the hull, shown by the bubble stream." },
+    { label: "Rear outlet", els: ["rear_outlet"], tex: "intake", text: "Where the water leaves, with a splash and wake trailing behind." },
+    { label: "Deck", els: ["deck"], tex: "black", text: "Black trim plate between the hull and the housing." },
+    { label: "Housing", els: ["housing"], tex: "body_front", text: "White shell with a black status band and a blue generating light on the front." },
+    { label: "Side cable port", els: ["side_port"], tex: "port", text: "Connect cables here. Power leaves through every face except the bottom." },
+    { label: "Engine", els: ["engine", "engine_cap", "exhaust"], tex: "engine", text: "Small finned black engine with a white cap and an exhaust stack." },
+    { label: "Flywheels", els: ["flywheel_left", "flywheel_right"], tex: "white", text: "White flywheels on each side of the engine." },
+    { label: "Top cable port", els: ["top_port"], tex: "port", text: "Second cable connection, on top of the engine." },
+  ];
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const state = { motion: !reduceMotion, bubbles: true, water: true, bounds: false, spin: !reduceMotion, facing: 0 };
+  const SURFACE = -1 / 9;            // top of a water source block under the skimmer
+  const FACING_VEC = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W as (x, z)
+
+  // ---------- textures ----------
+  const loader = new THREE.LoadingManager();
+  const texLoader = new THREE.TextureLoader(loader);
+  const textures = {};
+  for (const [name, uri] of Object.entries(TEX)) {
+    const t = texLoader.load(uri);
+    t.magFilter = THREE.NearestFilter;
+    t.minFilter = THREE.NearestFilter;
+    t.generateMipmaps = false;
+    textures[name] = t;
+  }
+
+  // ---------- scene ----------
+  const stage = document.getElementById("stage");
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const SKY = { 1: 0xbcd3de, 1.25: 0x9fb2bb, 1.75: 0x6f7c84 };
+  scene.background = new THREE.Color(SKY[1]);
+  scene.fog = new THREE.Fog(SKY[1], 4.5, 11);
+
+  const camera = new THREE.PerspectiveCamera(40, 4 / 3, 0.05, 50);
+  const orbit = { yaw: 2.35, pitch: 0.42, r: 2.7, target: new THREE.Vector3(0, 0.25, 0) };
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x4a6a7a, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+  sun.position.set(2.5, 4, -1.5);
+  scene.add(sun);
+
+  // Build the block model exactly as Minecraft would: 16 px per block, block bottom at y = 0
+  const FACE_ORDER = ["east", "west", "up", "down", "south", "north"]; // three.js BoxGeometry face order
+  const elementMeshes = {};
+  function buildElement(el) {
+    const [x1, y1, z1] = el.from, [x2, y2, z2] = el.to;
+    const geo = new THREE.BoxGeometry((x2 - x1) / 16, (y2 - y1) / 16, (z2 - z1) / 16);
+    const uvs = geo.attributes.uv;
+    const mats = FACE_ORDER.map((f, i) => {
+      const face = el.faces[f];
+      const [u0, v0, u1, v1] = face.uv;
+      const U0 = u0 / 16, U1 = u1 / 16, V0 = 1 - v0 / 16, V1 = 1 - v1 / 16;
+      uvs.setXY(i * 4, U0, V0); uvs.setXY(i * 4 + 1, U1, V0);
+      uvs.setXY(i * 4 + 2, U0, V1); uvs.setXY(i * 4 + 3, U1, V1);
+      return new THREE.MeshLambertMaterial({ map: textures[face.texture.slice(1)] });
+    });
+    uvs.needsUpdate = true;
+    const mesh = new THREE.Mesh(geo, mats);
+    elementMeshes[el.name] = mesh;
+    const c = new THREE.Vector3((x1 + x2) / 32 - 0.5, (y1 + y2) / 32, (z1 + z2) / 32 - 0.5);
+    if (!el.rotation) { mesh.position.copy(c); return mesh; }
+    const o = el.rotation.origin;
+    const pivot = new THREE.Group();
+    pivot.position.set(o[0] / 16 - 0.5, o[1] / 16, o[2] / 16 - 0.5);
+    mesh.position.copy(c.sub(pivot.position));
+    pivot.rotation[el.rotation.axis] = THREE.MathUtils.degToRad(el.rotation.angle);
+    pivot.add(mesh);
+    return pivot;
+  }
+  const model = new THREE.Group();
+  MODEL.elements.forEach(el => model.add(buildElement(el)));
+  const facingGroup = new THREE.Group();   // blockstate y-rotation
+  const bobGroup = new THREE.Group();      // renderer bob / pitch / roll
+  facingGroup.add(model);
+  bobGroup.add(facingGroup);
+  scene.add(bobGroup);
+
+  const bounds = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 }));
+  bounds.position.y = 0.5;
+  bounds.visible = false;
+  scene.add(bounds);
+
+  // Water surface and sea floor
+  const waterGeo = new THREE.PlaneGeometry(12, 12, 96, 96);
+  waterGeo.rotateX(-Math.PI / 2);
+  const waterBase = Float32Array.from(waterGeo.attributes.position.array);
+  const water = new THREE.Mesh(waterGeo, new THREE.MeshPhongMaterial({
+    color: 0x2f73a8, transparent: true, opacity: 0.62, shininess: 90, specular: 0x9fd2ff, depthWrite: false }));
+  water.position.y = SURFACE;
+  water.renderOrder = 1;
+  scene.add(water);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshLambertMaterial({ color: 0x8c8466 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.6;
+  scene.add(floor);
+
+  // ---------- particles ----------
+  function dotTexture(ring) {
+    const c = document.createElement("canvas"); c.width = c.height = 32;
+    const g = c.getContext("2d");
+    g.beginPath(); g.arc(16, 16, 12, 0, Math.PI * 2);
+    if (ring) { g.lineWidth = 4; g.strokeStyle = "#fff"; g.stroke(); g.fillStyle = "rgba(255,255,255,.25)"; g.fill(); }
+    else { g.fillStyle = "#fff"; g.fill(); }
+    return new THREE.CanvasTexture(c);
+  }
+  const MAX = 700;
+  function system(tex, size, color) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(MAX * 3);
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setDrawRange(0, 0);
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+      map: tex, size, color, transparent: true, depthWrite: false, alphaTest: 0.05 }));
+    pts.renderOrder = 2;
+    pts.frustumCulled = false;
+    scene.add(pts);
+    return { geo, pos, list: [], pts };
+  }
+  const bubbles = system(dotTexture(true), 0.055, 0xeaf7ff);
+  const spray = system(dotTexture(false), 0.035, 0xf4fbff);
+
+  const rand = () => Math.random();
+  function spawn(sys, p) { if (sys.list.length < MAX) sys.list.push(p); }
+
+  // Port of WaveSkimmerBlockEntity.clientTick, one call per game tick
+  function particleTick(strength) {
+    const [fx, fz] = FACING_VEC[state.facing];
+    const cx = 0, cz = 0, y = 0;
+    for (let i = 0; i < 2; i++) {
+      if (rand() < strength) {
+        const along = rand() - 0.5, across = (rand() - 0.5) * 0.8;
+        spawn(bubbles, { kind: "bubble", x: cx + fx * along - fz * across, y: y - 0.25 - rand() * 0.4, z: cz + fz * along + fx * across,
+          vx: -fx * 0.4 * 0.2 + (rand() - 0.5) * 0.02, vy: 0.01 + (rand() - 0.5) * 0.02, vz: -fz * 0.4 * 0.2 + (rand() - 0.5) * 0.02, life: 10 + rand() * 30 });
+      }
+    }
+    if (rand() < 1 / 3) {
+      spawn(bubbles, { kind: "column", x: cx + (rand() - 0.5) * 0.4, y: y - 0.9, z: cz + (rand() - 0.5) * 0.4, vx: 0, vy: 0.04, vz: 0, life: 60 });
+    }
+    if (rand() < 1 / 4) {
+      spawn(spray, { kind: "pop", x: cx + rand() - 0.5, y: SURFACE + 0.01, z: cz + rand() - 0.5, vx: 0, vy: 0.004, vz: 0, life: 4 });
+    }
+    const tx = cx - fx * 0.6, tz = cz - fz * 0.6;
+    if (rand() < strength * 0.4) {
+      const across = (rand() - 0.5) * 0.4;
+      spawn(spray, { kind: "splash", x: tx - fz * across, y: y + 0.05, z: tz + fx * across,
+        vx: -fx * 0.05 + (rand() - 0.5) * 0.03, vy: 0.06 + rand() * 0.05, vz: -fz * 0.05 + (rand() - 0.5) * 0.03, life: 30 });
+    }
+    if (rand() < 1 / 5) {
+      spawn(spray, { kind: "wake", x: tx, y: SURFACE + 0.01, z: tz, vx: -fx * 0.02, vy: 0, vz: -fz * 0.02, life: 18 });
+    }
+  }
+  function stepSystem(sys) {
+    sys.list = sys.list.filter(p => {
+      p.x += p.vx; p.y += p.vy; p.z += p.vz; p.life--;
+      if (p.kind === "bubble") { p.vx *= 0.85; p.vz *= 0.85; p.vy = p.vy * 0.85 + 0.002; }
+      else if (p.kind === "column") { p.vy = Math.min(0.08, p.vy + 0.002); }
+      else if (p.kind === "splash") { p.vy -= 0.02; if (p.y < SURFACE) return false; }
+      if ((p.kind === "bubble" || p.kind === "column") && p.y > SURFACE - 0.02) {
+        spawn(spray, { kind: "pop", x: p.x, y: SURFACE + 0.01, z: p.z, vx: 0, vy: 0.004, vz: 0, life: 4 });
+        return false;
+      }
+      return p.life > 0;
+    });
+  }
+  function flush(sys) {
+    sys.list.forEach((p, i) => { sys.pos[i * 3] = p.x; sys.pos[i * 3 + 1] = p.y; sys.pos[i * 3 + 2] = p.z; });
+    sys.geo.setDrawRange(0, sys.list.length);
+    sys.geo.attributes.position.needsUpdate = true;
+  }
+
+  // ---------- wave maths (same as the mod) ----------
+  const phaseFor = (x, z) => x * 0.35 + z * 0.2;
+  const PHASE = phaseFor(0, 0);
+  const swell = t => Math.sin(t / 30 + PHASE) * 0.6 + Math.sin(t / 11 + PHASE * 1.7) * 0.4;
+  const waveStrength = t => 0.75 + 0.25 * swell(t);
+
+  // ---------- output panel ----------
+  const els = id => document.getElementById(id);
+  const inputs = { water: els("water"), biome: els("biome"), weather: els("weather") };
+  const history = [];
+  function feAt(t) {
+    return Math.round(40 * waveStrength(t) * (inputs.water.value / 25) * inputs.biome.value * inputs.weather.value);
+  }
+  function peak() { return 40 * (inputs.water.value / 25) * inputs.biome.value * inputs.weather.value; }
+  function updateStatic() {
+    els("water-out").textContent = inputs.water.value + " / 25";
+    const avg = 0.75 * peak();
+    els("avg").textContent = Math.round(avg) + " FE/t";
+    const secs = avg > 0 ? 100000 / avg / 20 : Infinity;
+    els("fill").textContent = isFinite(secs) ? `${Math.floor(secs / 60)}m ${String(Math.round(secs % 60)).padStart(2, "0")}s` : "never";
+    const w = inputs.weather.value;
+    scene.background.setHex(SKY[w]); scene.fog.color.setHex(SKY[w]);
+    stage.style.background = "#" + SKY[w].toString(16).padStart(6, "0");
+  }
+  Object.values(inputs).forEach(i => i.addEventListener("input", updateStatic));
+
+  const spark = els("spark");
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function drawSpark() {
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    const W = spark.clientWidth, H = spark.clientHeight;
+    if (spark.width !== W * dpr) { spark.width = W * dpr; spark.height = H * dpr; }
+    const g = spark.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const max = Math.max(1, peak()), padT = 14, padB = 4;
+    const yOf = v => padT + (H - padT - padB) * (1 - v / max);
+    g.strokeStyle = css("--line"); g.lineWidth = 1;
+    [0, 0.5, 1].forEach(f => { g.beginPath(); g.moveTo(0, yOf(max * f) + .5); g.lineTo(W, yOf(max * f) + .5); g.stroke(); });
+    g.fillStyle = css("--muted"); g.font = "500 10px " + css("--mono");
+    g.fillText(Math.round(max) + " FE/t peak · last 10 s", 0, 10);
+    if (history.length < 2) return;
+    const step = W / 199;
+    const accent = css("--accent");
+    g.beginPath();
+    history.forEach((v, i) => { const x = i * step, y = yOf(v); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.strokeStyle = accent; g.lineWidth = 2; g.stroke();
+    g.lineTo((history.length - 1) * step, H); g.lineTo(0, H); g.closePath();
+    g.globalAlpha = 0.14; g.fillStyle = accent; g.fill(); g.globalAlpha = 1;
+    const lx = (history.length - 1) * step, ly = yOf(history[history.length - 1]);
+    g.beginPath(); g.arc(lx, ly, 3.5, 0, Math.PI * 2); g.fillStyle = accent; g.fill();
+  }
+
+  // ---------- toolbar ----------
+  function toggle(id, key, after) {
+    const b = els(id);
+    b.setAttribute("aria-pressed", String(state[key]));
+    b.addEventListener("click", () => { state[key] = !state[key]; b.setAttribute("aria-pressed", String(state[key])); after && after(); });
+  }
+  toggle("t-motion", "motion");
+  toggle("t-bubbles", "bubbles", () => { bubbles.pts.visible = spray.pts.visible = state.bubbles; });
+  toggle("t-water", "water", () => { water.visible = floor.visible = state.water; });
+  toggle("t-bounds", "bounds", () => { bounds.visible = state.bounds; });
+  toggle("t-spin", "spin");
+  const NAMES = ["N", "E", "S", "W"];
+  els("facing").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.facing = +b.dataset.f;
+    facingGroup.rotation.y = -state.facing * Math.PI / 2;
+    els("facing").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    els("compass").textContent = "facing " + NAMES[state.facing];
+  });
+
+  // ---------- parts list with highlight ----------
+  const partsList = els("parts");
+  function highlight(names, on) {
+    names.forEach(n => elementMeshes[n].material.forEach(m => m.emissive.setHex(on ? 0x2a8fb0 : 0x000000)));
+  }
+  PARTS.forEach(p => {
+    const li = document.createElement("li");
+    li.className = "part"; li.tabIndex = 0;
+    li.innerHTML = `<img class="sw" alt="" src="${TEX[p.tex]}"><div><b>${p.label}</b><span>${p.text}</span></div>`;
+    const on = () => { li.classList.add("on"); highlight(p.els, true); };
+    const off = () => { li.classList.remove("on"); highlight(p.els, false); };
+    li.addEventListener("mouseenter", on); li.addEventListener("mouseleave", off);
+    li.addEventListener("focus", on); li.addEventListener("blur", off);
+    partsList.appendChild(li);
+  });
+
+  // ---------- texture strip ----------
+  const texBox = els("tex");
+  Object.entries(TEX).forEach(([name, uri]) => {
+    const f = document.createElement("figure");
+    f.innerHTML = `<img alt="${name} texture" src="${uri}"><figcaption>${name}.png</figcaption>`;
+    texBox.appendChild(f);
+  });
+
+  // ---------- recipe ----------
+  function pixelIcon(draw) {
+    const c = document.createElement("canvas"); c.width = c.height = 16;
+    draw(c.getContext("2d")); return c;
+  }
+  const px = (g, col, x, y, w = 1, h = 1) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  const ICONS = {
+    I: g => { px(g, "#3a3a3a", 2, 6, 12, 6); px(g, "#d8d8d8", 3, 6, 10, 2); px(g, "#b4b4b4", 3, 8, 10, 3); px(g, "#ffffff", 4, 6, 6, 1); px(g, "#8a8a8a", 3, 10, 10, 1); },
+    T: g => { px(g, "#5a4128", 2, 2, 12, 12); px(g, "#a47e4c", 3, 3, 10, 10); px(g, "#7a5c34", 3, 8, 10, 1); px(g, "#7a5c34", 8, 3, 1, 10);
+              [[4, 4], [10, 4], [4, 10], [10, 10]].forEach(([x, y]) => px(g, "#2c2014", x, y, 2, 2)); },
+    R: g => { [[6, 5], [8, 4], [9, 7], [5, 8], [7, 8], [10, 9], [6, 10], [8, 11], [4, 6], [11, 6]].forEach(([x, y], i) => { px(g, i % 3 ? "#c51c14" : "#ff4a3a", x, y, 2, 2); }); px(g, "#6e0b07", 7, 7, 2, 1); },
+  };
+  const craft = els("craft");
+  ["III", "TTT", "IRI"].join("").split("").forEach(k => {
+    const s = document.createElement("div"); s.className = "slot"; s.title = { I: "Iron ingot", T: "Trapdoor", R: "Redstone dust" }[k];
+    s.appendChild(pixelIcon(ICONS[k])); craft.appendChild(s);
+  });
+
+  // Item icon for the result slot, rendered from the same model
+  loader.onLoad = () => {
+    const r = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    r.setPixelRatio(2); r.setSize(68, 68);
+    const s = new THREE.Scene();
+    s.add(new THREE.HemisphereLight(0xffffff, 0x555555, 0.8));
+    const l = new THREE.DirectionalLight(0xffffff, 0.7); l.position.set(2, 4, -3); s.add(l);
+    const m = model.clone(); m.position.y = -0.3; s.add(m);
+    const cam = new THREE.OrthographicCamera(-0.72, 0.72, 0.72, -0.72, 0.1, 10);
+    cam.position.set(1.6, 1.3, -1.6); cam.lookAt(0, 0.05, 0);
+    r.render(s, cam);
+    els("result").appendChild(r.domElement);
+  };
+
+  // ---------- orbit controls ----------
+  const pointers = new Map(); let pinch = 0;
+  stage.addEventListener("pointerdown", e => { stage.setPointerCapture(e.pointerId); pointers.set(e.pointerId, [e.clientX, e.clientY]); state.spin = false; els("t-spin").setAttribute("aria-pressed", "false"); });
+  stage.addEventListener("pointermove", e => {
+    if (!pointers.has(e.pointerId)) return;
+    const [px0, py0] = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 1) {
+      orbit.yaw -= (e.clientX - px0) * 0.008;
+      orbit.pitch = Math.min(1.45, Math.max(-0.35, orbit.pitch + (e.clientY - py0) * 0.006));
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (pinch) orbit.r = Math.min(7, Math.max(1.2, orbit.r * pinch / d));
+      pinch = d;
+    }
+  });
+  const up = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = 0; };
+  stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+  stage.addEventListener("wheel", e => { e.preventDefault(); orbit.r = Math.min(7, Math.max(1.2, orbit.r * (1 + e.deltaY * 0.001))); }, { passive: false });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage);
+
+  // ---------- loop ----------
+  let ticks = 0, acc = 0, last = performance.now(), motionTime = 0;
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    acc += dt;
+    while (acc >= 0.05) {
+      acc -= 0.05; ticks++;
+      history.push(feAt(ticks)); if (history.length > 200) history.shift();
+      if (state.bubbles && state.water) particleTick(waveStrength(ticks));
+      stepSystem(bubbles); stepSystem(spray);
+    }
+    if (state.motion) motionTime += dt * 20;
+    const t = motionTime;
+    const phase = PHASE;
+    bobGroup.position.y = state.motion ? swell(t) * 0.035 : 0;
+    bobGroup.rotation.x = state.motion ? THREE.MathUtils.degToRad(Math.sin(t / 30 + phase + 1.2) * 3) : 0;
+    bobGroup.rotation.z = state.motion ? THREE.MathUtils.degToRad(Math.cos(t / 23 + phase) * 2) : 0;
+
+    const p = waterGeo.attributes.position, amp = inputs.weather.value > 1.5 ? 1.8 : inputs.weather.value > 1 ? 1.3 : 1;
+    for (let i = 0; i < p.count; i++) {
+      const x = waterBase[i * 3], z = waterBase[i * 3 + 2];
+      p.setY(i, amp * (0.012 * Math.sin(x * 2.1 + t * 0.07) + 0.008 * Math.sin(z * 3.3 + t * 0.11)));
+    }
+    p.needsUpdate = true; waterGeo.computeVertexNormals();
+
+    flush(bubbles); flush(spray);
+    if (state.spin) orbit.yaw += dt * 0.25;
+    camera.position.set(
+      orbit.target.x + orbit.r * Math.cos(orbit.pitch) * Math.sin(orbit.yaw),
+      orbit.target.y + orbit.r * Math.sin(orbit.pitch),
+      orbit.target.z + orbit.r * Math.cos(orbit.pitch) * Math.cos(orbit.yaw));
+    camera.lookAt(orbit.target);
+    renderer.render(scene, camera);
+
+    els("now").textContent = history.length ? history[history.length - 1] : 0;
+    drawSpark();
+    requestAnimationFrame(frame);
+  }
+  updateStatic();
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
